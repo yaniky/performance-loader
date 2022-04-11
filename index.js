@@ -5,6 +5,7 @@ const t = require('@babel/types');
 
 const startPerformanceTimeName = "LOADER_START_PERFORMANCE_TIME";
 const endPerformanceTimeName = "LOADER_END_PERFORMANCE_TIME";
+const performanceTimeUseName = "LOADER_PERFORMANCE_TIME_USE";
 
 const PerformaceLoader = function(source) {
     const options = {
@@ -44,7 +45,7 @@ const PerformaceLoader = function(source) {
 
                 const computed = t.variableDeclaration("const", [
                     t.variableDeclarator(
-                        t.identifier('performanceTimeUse'),
+                        t.identifier(performanceTimeUseName),
                         t.binaryExpression("-", t.identifier(endPerformanceTimeName), t.identifier(startPerformanceTimeName))
                     )
                 ]);
@@ -52,7 +53,7 @@ const PerformaceLoader = function(source) {
                 const ifToLongTime = t.ifStatement(
                     t.binaryExpression(
                         ">",
-                        t.identifier("performanceTimeUse"),
+                        t.identifier(performanceTimeUseName),
                         t.numericLiteral(options.performanceTime)
                     ),
                     t.expressionStatement(
@@ -62,7 +63,7 @@ const PerformaceLoader = function(source) {
                                 t.binaryExpression(
                                     "+",
                                     t.stringLiteral(`${ node.id.name }: use to long time => `),
-                                    t.identifier('performanceTimeUse')
+                                    t.identifier(performanceTimeUseName)
                                 )
                             ]
                         )
