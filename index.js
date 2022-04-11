@@ -49,16 +49,6 @@ const PerformaceLoader = function(source) {
                     )
                 ]);
 
-                const showTime = t.expressionStatement(
-                    t.callExpression(
-                        t.identifier('console.warn'),
-                        [
-                            t.stringLiteral(`${ node.id.name } use time`),
-                            t.identifier('performanceTimeUse')
-                        ]
-                    )
-                );
-
                 const ifToLongTime = t.ifStatement(
                     t.binaryExpression(
                         ">",
@@ -79,7 +69,7 @@ const PerformaceLoader = function(source) {
                     )
                 )
 
-                const newBody = t.blockStatement([startNode, node.body, endNode, computed, showTime, ifToLongTime])
+                const newBody = t.blockStatement([startNode, node.body, endNode, computed, ifToLongTime])
 
                 node.body = newBody;
             }

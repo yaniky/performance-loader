@@ -24,7 +24,7 @@ module.exports = {
                     {
                         loader: path.resolve(__dirname, "./index.js"),
                         options: {
-                            performanceTime: 1000
+                            performanceTime: 500
                         },
                     }
                 ]
