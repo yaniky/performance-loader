@@ -2,33 +2,7 @@ function test() {
     console.log(111);
 }
 
-const workerUrl = 'https://webgame.vrviu.com/lightplay/static-resource/sdk/publish/lightplay_h5_sdk_v2.63/default-logger.worker.js?t=1649649264473'
-
-const decodeBlob = new Blob(
-    [`importScripts("${workerUrl}?t=${Date.now()}")`],
-    { type: 'application/javascript' }
-);
-
-const decoderScript = window.URL.createObjectURL(decodeBlob);
-
-const w = new Worker(decoderScript);
-
-// const data = {
-//     a: 1,
-//     b: 2,
-//     c: {
-//         a: 1,
-//         b: 2
-//     },
-//     d: {
-//         a: 1,
-//         b: 2,
-//         c: {
-//             a: 1,
-//             b: 2
-//         }
-//     }
-// }
+const w = new Worker(new URL('./worker.js', import.meta.url));
 
 function objectCall() {
     for (let i = 0; i < 50000; i++) {
