@@ -1,0 +1,31 @@
+{
+  "name": "performance-loader",
+  "version": "1.0.0",
+  "license": "MIT",
+  "description": "",
+  "author": "yaniky",
+  "main": "index.js",
+  "scripts": {
+    "dev": "webpack server --hot --config webpack.config.js",
+    "build": "webpack --config webpack.config.js"
+  },
+  "keywords": [
+    "webpack"
+  ],
+  "engines": {
+    "node": ">=14.17.0"
+  },
+  "devDependencies": {
+    "html-webpack-plugin": "^5.5.0",
+    "path": "^0.12.7",
+    "webpack": "^5.72.0",
+    "webpack-cli": "^4.9.2",
+    "webpack-dev-server": "^4.8.1"
+  },
+  "dependencies": {
+    "@babel/generator": "^7.17.9",
+    "@babel/parser": "^7.17.9",
+    "@babel/types": "^7.17.0",
+    "babel-traverse": "^6.26.0"
+  }
+}
