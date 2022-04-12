@@ -27,6 +27,53 @@ function getParentId(path) {
     return path.start;
 }
 
+function notifyUseLongTime(timeName, msg) {
+    // return t.ifStatement(
+    //     t.binaryExpression(
+    //         ">",
+    //         t.identifier(timeName),
+    //         t.numericLiteral(options.performanceTime)
+    //     ),
+    //     t.expressionStatement(
+    //         t.callExpression(
+    //             t.identifier('console.warn'),
+    //             [
+    //                 t.binaryExpression(
+    //                     "+",
+    //                     t.stringLiteral(msg),
+    //                     t.identifier(timeName)
+    //                 )
+    //             ]
+    //         )
+    //     )
+    // );
+
+    return t.ifStatement(
+        t.binaryExpression(
+            ">",
+            t.identifier(timeName),
+            t.numericLiteral(options.performanceTime)
+        ),
+        t.expressionStatement(
+            t.callExpression(
+                t.identifier('setTimeout'),
+                [
+                    t.templateLiteral(
+                        [
+                            t.templateElement({raw: `console.warn("${msg}" + `}, false),
+                            t.templateElement({raw: ")"}, true),
+                        ],
+                        [
+                            t.identifier(timeName)
+                        ]
+                    ),
+                    t.numericLiteral(0)
+                ]
+            )
+        )
+    );
+}
+
 function appendPerformanceCode(path) {
     const node = path.node;
 
@@ -58,25 +105,7 @@ function appendPerformanceCode(path) {
             )
         ]);
 
-        const ifToLongTime = t.ifStatement(
-            t.binaryExpression(
-                ">",
-                t.identifier(performanceTimeUseName),
-                t.numericLiteral(options.performanceTime)
-            ),
-            t.expressionStatement(
-                t.callExpression(
-                    t.identifier('console.warn'),
-                    [
-                        t.binaryExpression(
-                            "+",
-                            t.stringLiteral(`${ getParentId(path) } ${funcIndex++}: use to long time => `),
-                            t.identifier(performanceTimeUseName)
-                        )
-                    ]
-                )
-            )
-        )
+        const ifToLongTime = notifyUseLongTime(performanceTimeUseName, `${ getParentId(path) } ${funcIndex++}: use to long time => `);
 
         let nowBody = [];
 
@@ -123,25 +152,7 @@ function appendBeforeReturn(path) {
                         t.binaryExpression("-", t.identifier(nowEndTimeName), t.identifier(startPerformanceTimeName))
                     )
                 ]),
-                t.ifStatement(
-                    t.binaryExpression(
-                        ">",
-                        t.identifier(nowUseTimeName),
-                        t.numericLiteral(options.performanceTime)
-                    ),
-                    t.expressionStatement(
-                        t.callExpression(
-                            t.identifier('console.warn'),
-                            [
-                                t.binaryExpression(
-                                    "+",
-                                    t.stringLiteral(`${parentName}: return ${returnIndex} use to long time => `),
-                                    t.identifier(nowUseTimeName)
-                                )
-                            ]
-                        )
-                    )
-                )
+                notifyUseLongTime(nowUseTimeName, `${parentName}: return ${returnIndex} use to long time => `)
             ]
         )
     );
