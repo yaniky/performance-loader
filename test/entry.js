@@ -1,5 +1,6 @@
 function test() {
     console.log(111);
+    typeof b
 }
 
 const w = new Worker(new URL('./worker.js', import.meta.url));
@@ -70,6 +71,29 @@ function jsonCall() {
             }
         }))
     }
+}
+
+function proFunc() {
+    return new Promise(resolve => {
+        console.log("resolve");
+        setTimeout(() => {
+            test();
+        }, 1000);
+        resolve(true);
+    }).then(res => {
+        console.log('then');
+    }).catch(e => {
+        console.log(e);
+    });
+}
+
+async function asyFunc() {
+    await proFunc();
+}
+
+function returnFunc() {
+    const a = "aa";
+    return a;
 }
 
 test();
