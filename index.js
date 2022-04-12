@@ -78,12 +78,77 @@ function appendPerformanceCode(path) {
             )
         )
 
-        const nowBody = node.body;
+        let nowBody = [];
 
-        const newBody = t.blockStatement([startNode, nowBody, endNode, computed, ifToLongTime])
+        if (node.body.type !== "BlockStatement") {
+            nowBody = [t.expressionStatement(
+                node.body
+            )];
+        } else {
+            nowBody = node.body.body;
+        }
+
+        const newBody = t.blockStatement([startNode].concat(nowBody).concat([endNode, computed, ifToLongTime]))
 
         node.body = newBody;
     }
+}
+
+function appendBeforeReturn(path) {
+    const parentName = getParentId(path);
+
+    const nowEndTimeName = `${endPerformanceTimeName}_${returnIndex}`;
+    const nowUseTimeName = `${performanceTimeUseName}_${returnIndex}`;
+    
+    const ifToLongTime = t.ifStatement(
+        t.binaryExpression(
+            "===",
+            t.unaryExpression("typeof", t.identifier(startPerformanceTimeName)),
+            t.stringLiteral("number")
+        ),
+        t.blockStatement(
+            [
+                t.variableDeclaration("const", [
+                    t.variableDeclarator(
+                        t.identifier(nowEndTimeName),
+                        t.callExpression(
+                            t.identifier('performance.now'),
+                            []
+                        )
+                    )
+                ]),
+                t.variableDeclaration("const", [
+                    t.variableDeclarator(
+                        t.identifier(nowUseTimeName),
+                        t.binaryExpression("-", t.identifier(nowEndTimeName), t.identifier(startPerformanceTimeName))
+                    )
+                ]),
+                t.ifStatement(
+                    t.binaryExpression(
+                        ">",
+                        t.identifier(nowUseTimeName),
+                        t.numericLiteral(options.performanceTime)
+                    ),
+                    t.expressionStatement(
+                        t.callExpression(
+                            t.identifier('console.warn'),
+                            [
+                                t.binaryExpression(
+                                    "+",
+                                    t.stringLiteral(`${parentName}: return ${returnIndex} use to long time => `),
+                                    t.identifier(nowUseTimeName)
+                                )
+                            ]
+                        )
+                    )
+                )
+            ]
+        )
+    );
+
+    returnIndex++
+
+    path.insertBefore(ifToLongTime);
 }
 
 const PerformaceLoader = function(source) {
@@ -104,61 +169,11 @@ const PerformaceLoader = function(source) {
         FunctionDeclaration(path) {
             appendPerformanceCode(path);
         },
+        FunctionExpression(path) {
+            appendPerformanceCode(path);
+        },
         ReturnStatement(path) {
-            const parentName = getParentId(path);
-
-            const nowEndTimeName = `${endPerformanceTimeName}_${returnIndex}`;
-            const nowUseTimeName = `${performanceTimeUseName}_${returnIndex}`;
-            
-            const ifToLongTime = t.ifStatement(
-                t.binaryExpression(
-                    "===",
-                    t.unaryExpression("typeof", t.identifier(startPerformanceTimeName)),
-                    t.stringLiteral("number")
-                ),
-                t.blockStatement(
-                    [
-                        t.variableDeclaration("const", [
-                            t.variableDeclarator(
-                                t.identifier(nowEndTimeName),
-                                t.callExpression(
-                                    t.identifier('performance.now'),
-                                    []
-                                )
-                            )
-                        ]),
-                        t.variableDeclaration("const", [
-                            t.variableDeclarator(
-                                t.identifier(nowUseTimeName),
-                                t.binaryExpression("-", t.identifier(nowEndTimeName), t.identifier(startPerformanceTimeName))
-                            )
-                        ]),
-                        t.ifStatement(
-                            t.binaryExpression(
-                                ">",
-                                t.identifier(nowUseTimeName),
-                                t.numericLiteral(options.performanceTime)
-                            ),
-                            t.expressionStatement(
-                                t.callExpression(
-                                    t.identifier('console.warn'),
-                                    [
-                                        t.binaryExpression(
-                                            "+",
-                                            t.stringLiteral(`${parentName}: return ${returnIndex} use to long time => `),
-                                            t.identifier(nowUseTimeName)
-                                        )
-                                    ]
-                                )
-                            )
-                        )
-                    ]
-                )
-            );
-
-            returnIndex++
-
-            path.insertBefore(ifToLongTime);
+            appendBeforeReturn(path);
         }
     });
 
