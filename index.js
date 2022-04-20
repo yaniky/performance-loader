@@ -12,42 +12,21 @@ let returnIndex = 0;
 let funcIndex = 0;
 
 let options = {
-    performanceTime: 1000
+    performanceTime: 1000,
+    showNotifyAtWorker: true
 }
 
 function getParentId(path) {
-    if (path.node && path.node.id) {
-        return path.node.id.name;
-    }
+    const nowName = path.node && path.node.id ? `_${path.node.id.name}` : "";
 
     if (path.parentPath) {
-        return getParentId(path.parentPath);
+        return getParentId(path.parentPath) + nowName;
     }
 
-    return path.start;
+    return nowName;
 }
 
 function notifyUseLongTime(timeName, msg) {
-    // return t.ifStatement(
-    //     t.binaryExpression(
-    //         ">",
-    //         t.identifier(timeName),
-    //         t.numericLiteral(options.performanceTime)
-    //     ),
-    //     t.expressionStatement(
-    //         t.callExpression(
-    //             t.identifier('console.warn'),
-    //             [
-    //                 t.binaryExpression(
-    //                     "+",
-    //                     t.stringLiteral(msg),
-    //                     t.identifier(timeName)
-    //                 )
-    //             ]
-    //         )
-    //     )
-    // );
-
     return t.ifStatement(
         t.binaryExpression(
             ">",
@@ -60,7 +39,7 @@ function notifyUseLongTime(timeName, msg) {
                 [
                     t.templateLiteral(
                         [
-                            t.templateElement({raw: `console.warn("${msg}" + `}, false),
+                            t.templateElement({raw: (options.showNotifyAtWorker ? "" : "typeof window !=='undefined'&&") + `console.warn("${msg}" + `}, false),
                             t.templateElement({raw: ")"}, true),
                         ],
                         [
@@ -107,19 +86,22 @@ function appendPerformanceCode(path) {
 
         const ifToLongTime = notifyUseLongTime(performanceTimeUseName, `${ getParentId(path) } ${funcIndex++}: use to long time => `);
 
-        let nowBody = [];
+        // let nowBody = [];
 
-        if (node.body.type !== "BlockStatement") {
-            nowBody = [t.expressionStatement(
-                node.body
-            )];
-        } else {
-            nowBody = node.body.body;
+        // if (node.body.type !== "BlockStatement") {
+        //     nowBody = [t.expressionStatement(
+        //         node.body
+        //     )];
+        // } else {
+        //     nowBody = node.body.body;
+        // }
+
+        // const newBody = t.blockStatement([startNode].concat(nowBody).concat([endNode, computed, ifToLongTime]))
+
+        if (node.body.type  === "BlockStatement") {
+            const newBody = t.blockStatement([startNode].concat(node.body.body).concat([endNode, computed, ifToLongTime]));
+            node.body = newBody;
         }
-
-        const newBody = t.blockStatement([startNode].concat(nowBody).concat([endNode, computed, ifToLongTime]))
-
-        node.body = newBody;
     }
 }
 
@@ -181,6 +163,9 @@ const PerformaceLoader = function(source) {
             appendPerformanceCode(path);
         },
         FunctionExpression(path) {
+            appendPerformanceCode(path);
+        },
+        ClassMethod(path) {
             appendPerformanceCode(path);
         },
         ReturnStatement(path) {
